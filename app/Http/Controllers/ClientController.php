@@ -2,11 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Client;
-use Illuminate\Http\Request;
+use App\Http\Requests\ClientRequest;
+use App\Repositories\Contracts\ClientInterface;
 
 class ClientController extends Controller
 {
+    private $client;
+
+    public function __construct(ClientInterface $client)
+    {
+        $this->client = $client;
+
+        $this->middleware('auth:sanctum');
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -14,7 +23,12 @@ class ClientController extends Controller
      */
     public function index()
     {
-        //
+        $clients = $this->client->all();
+
+        return response([
+            'status' => 200,
+            'clients' => $clients
+        ]);
     }
 
     /**
@@ -33,20 +47,46 @@ class ClientController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(ClientRequest $request)
     {
-        //
+        $client = $this->client->store($request);
+
+        if ( ! $client) {
+            return response([
+                'status' => 401,
+                'message' => 'Client can not be created'
+            ]);
+        }
+
+        return response([
+            'status' => 200,
+            'client' => $client
+        ]);
     }
+
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Client  $client
-     * @return \Illuminate\Http\Response
+     * @param $id
+     *
+     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
      */
-    public function show(Client $client)
+    public function show($id)
     {
-        //
+        $client = $this->client->getById($id);
+
+        if ( ! $client) {
+            return response([
+                'status' => 401,
+                'message' => 'Client can not be found'
+            ]);
+        }
+
+        return response([
+            'status' => 200,
+            'client' => $client
+        ]);
     }
 
     /**
@@ -55,7 +95,7 @@ class ClientController extends Controller
      * @param  \App\Models\Client  $client
      * @return \Illuminate\Http\Response
      */
-    public function edit(Client $client)
+    public function edit($id)
     {
         //
     }
@@ -67,9 +107,30 @@ class ClientController extends Controller
      * @param  \App\Models\Client  $client
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Client $client)
+    public function update(ClientRequest $request, $id)
     {
-        //
+        $client = $this->client->getById($id);
+
+        if ( ! $client) {
+            return response([
+                'status' => 401,
+                'message' => 'Client can not be found'
+            ]);
+        }
+
+        $client = $this->client->update($id, $request);
+
+        if ( ! $client) {
+            return response([
+                'status' => 401,
+                'message' => 'Client can not be updated'
+            ]);
+        }
+
+        return response([
+            'status' => 200,
+            'client' => $client
+        ]);
     }
 
     /**
@@ -78,8 +139,22 @@ class ClientController extends Controller
      * @param  \App\Models\Client  $client
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Client $client)
+    public function destroy($id)
     {
-        //
+        $client = $this->client->getById($id);
+
+        if ( ! $client) {
+            return response([
+                'status' => 401,
+                'message' => 'Client can not be found'
+            ]);
+        }
+
+        $this->client->destroy($id);
+
+        return response([
+            'status' => 200,
+            'client' => $client
+        ]);
     }
 }

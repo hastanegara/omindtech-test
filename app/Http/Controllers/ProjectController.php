@@ -2,11 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Project;
-use Illuminate\Http\Request;
+use App\Http\Requests\ProjectRequest;
+use App\Repositories\Contracts\ProjectInterface;
 
 class ProjectController extends Controller
 {
+    private $project;
+
+    public function __construct(ProjectInterface $project)
+    {
+        $this->project = $project;
+
+        $this->middleware('auth:sanctum');
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -14,7 +23,12 @@ class ProjectController extends Controller
      */
     public function index()
     {
-        //
+        $projects = $this->project->all();
+
+        return response([
+            'status' => 200,
+            'projects' => $projects
+        ]);
     }
 
     /**
@@ -33,9 +47,21 @@ class ProjectController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(ProjectRequest $request)
     {
-        //
+        $project = $this->project->store($request);
+
+        if ( ! $project) {
+            return response([
+                'status' => 401,
+                'message' => 'Project can not be created'
+            ]);
+        }
+
+        return response([
+            'status' => 200,
+            'project' => $project
+        ]);
     }
 
     /**
@@ -44,9 +70,21 @@ class ProjectController extends Controller
      * @param  \App\Models\Project  $project
      * @return \Illuminate\Http\Response
      */
-    public function show(Project $project)
+    public function show($id)
     {
-        //
+        $project = $this->project->getById($id);
+
+        if ( ! $project) {
+            return response([
+                'status' => 401,
+                'message' => 'Project can not be found'
+            ]);
+        }
+
+        return response([
+            'status' => 200,
+            'project' => $project
+        ]);
     }
 
     /**
@@ -55,7 +93,7 @@ class ProjectController extends Controller
      * @param  \App\Models\Project  $project
      * @return \Illuminate\Http\Response
      */
-    public function edit(Project $project)
+    public function edit($id)
     {
         //
     }
@@ -67,9 +105,30 @@ class ProjectController extends Controller
      * @param  \App\Models\Project  $project
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Project $project)
+    public function update(ProjectRequest $request, $id)
     {
-        //
+        $project = $this->project->getById($id);
+
+        if ( ! $project) {
+            return response([
+                'status' => 401,
+                'message' => 'Client can not be found'
+            ]);
+        }
+
+        $project = $this->project->update($id, $request);
+
+        if ( ! $project) {
+            return response([
+                'status' => 401,
+                'message' => 'Project can not be updated'
+            ]);
+        }
+
+        return response([
+            'status' => 200,
+            'project' => $project
+        ]);
     }
 
     /**
@@ -78,8 +137,22 @@ class ProjectController extends Controller
      * @param  \App\Models\Project  $project
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Project $project)
+    public function destroy($id)
     {
-        //
+        $project = $this->project->getById($id);
+
+        if ( ! $project) {
+            return response([
+                'status' => 401,
+                'message' => 'Project can not be found'
+            ]);
+        }
+
+        $this->project->destroy($id);
+
+        return response([
+            'status' => 200,
+            'project' => $project
+        ]);
     }
 }
